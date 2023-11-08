@@ -1,0 +1,29 @@
+import json
+import boto3
+
+s3 = boto3.client('s3')
+
+def lambda_handler(event, context):
+    # Specify the S3 bucket and file extension to search for
+    # This could be used to find indicators of ransomware, or the end of a certain process
+    bucket_name = 'your-s3-bucket'
+    target_extension = '.txt'
+
+    # List objects in the specified S3 bucket
+    response = s3.list_objects_v2(Bucket=bucket_name)
+
+    # Filter objects with the specified file extension
+    matching_objects = [obj['Key'] for obj in response.get('Contents', []) if obj['Key'].endswith(target_extension)]
+
+    if matching_objects:
+        # Files with the specified extension were found
+        return {
+            "statusCode": 200,
+            "body": json.dumps(f"Found {len(matching_objects)} files with the '{target_extension}' extension: {matching_objects}")
+        }
+    else:
+        # No files with the specified extension were found
+        return {
+            "statusCode": 200,
+            "body": json.dumps(f"No files with the '{target_extension}' extension found in the S3 bucket.")
+        }
